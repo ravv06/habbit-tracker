@@ -387,7 +387,7 @@ button {
 }
 
 .metric-card {
-  height: clamp(160px, 23vh, 230px);
+  height: clamp(205px, 28vh, 242px);
   padding: 18px 20px;
   border-radius: 18px;
   position: relative;
