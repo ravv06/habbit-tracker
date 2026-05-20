@@ -1,4 +1,5 @@
 :root {
+  --desktop-scale: 0.8;
   --bg: #4a4a4a;
   --panel: #0b0b0b;
   --panel-soft: #171717;
@@ -41,8 +42,8 @@ button {
 }
 
 .app-shell {
-  width: 100vw;
-  height: 100vh;
+  width: calc(100vw / var(--desktop-scale));
+  height: calc(100vh / var(--desktop-scale));
   min-height: 0;
   margin: 0 auto;
   display: grid;
@@ -51,6 +52,8 @@ button {
   align-items: stretch;
   padding: 4px 6px;
   overflow: hidden;
+  transform: scale(var(--desktop-scale));
+  transform-origin: top left;
 }
 
 .stats-panel {
@@ -836,6 +839,7 @@ button {
   }
 
   .app-shell {
+    transform: none;
     height: auto;
     min-height: 100vh;
     grid-template-columns: 1fr;
