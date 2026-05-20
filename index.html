@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stats Habit Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="stats-panel" aria-label="Habit statistics">
+        <header class="stats-header">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 64 64" focusable="false">
+                <polygon points="32 8 50 18 50 39 32 50 14 39 14 18" fill="none" stroke="white" stroke-width="7" stroke-linejoin="round"></polygon>
+                <path d="M32 8v18l16 10M32 26 16 36M32 26v24" fill="none" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M18 18 32 26 46 18" fill="none" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+            <div>
+              <h1>Stats</h1>
+              <p>MONTHLY UPDATES</p>
+            </div>
+          </div>
+          <button class="project-pill" id="notifyButton" type="button">
+            <span>Habit Reminders</span>
+            <span class="chevron">v</span>
+          </button>
+          <div class="reminder-popover" id="reminderPopover">
+            <strong>Reminder Center</strong>
+            <p id="notifyStatus">Notifications are not enabled yet.</p>
+            <div id="nextReminderList"></div>
+            <button id="enableNotificationsButton" type="button">Enable laptop reminders</button>
+          </div>
+        </header>
+
+        <article class="activity-card">
+          <div class="activity-left">
+            <div class="section-title">
+              <h2>Habit Activity</h2>
+              <p>Today vs Yesterday</p>
+            </div>
+            <div class="bubble-chart" id="bubbleChart" aria-label="Habit activity chart"></div>
+          </div>
+          <div class="weekly-card">
+            <div class="weekly-title">
+              <h3>Weekly Completion</h3>
+              <p id="weeklyRange">From 14 May - 20 May</p>
+            </div>
+            <div class="legend">
+              <span><i class="legend-min"></i> Min 0%</span>
+              <span><i class="legend-max"></i> Max 0%</span>
+            </div>
+            <div class="bar-chart" id="barChart" aria-label="Weekly completion chart"></div>
+          </div>
+        </article>
+
+        <article class="summary-board">
+          <div class="metric-grid">
+            <div class="metric-card lavender">
+              <span class="metric-icon">▣</span>
+              <p>TASKS<br>COMPLETED</p>
+              <strong id="completedCount">0</strong>
+              <small id="completedDelta">+0%</small>
+            </div>
+            <div class="metric-card olive">
+              <span class="metric-icon">●</span>
+              <p>NEW HABITS<br>ADDED</p>
+              <strong id="habitCount">0</strong>
+              <small>+3%</small>
+            </div>
+            <div class="metric-card teal">
+              <span class="metric-icon">⚑</span>
+              <p>GOALS<br>ACHIEVED</p>
+              <strong id="goalCount">0</strong>
+              <small id="goalDelta">+0%</small>
+            </div>
+            <div class="metric-card lime">
+              <span class="metric-icon">↗</span>
+              <p>TOTAL<br>STREAKS</p>
+              <strong id="streakCount">0</strong>
+              <small>+5%</small>
+            </div>
+          </div>
+
+          <div class="line-card">
+            <h2>Consistency Over Time</h2>
+            <svg id="lineChart" viewBox="0 0 720 120" role="img" aria-label="Consistency over time line chart"></svg>
+          </div>
+        </article>
+      </section>
+
+      <section class="phone-panel" aria-label="Daily timetable">
+        <div class="phone-frame">
+          <header class="phone-topbar">
+            <button class="menu-button" type="button" aria-label="Open controls">=</button>
+            <button class="pause-button" id="pauseButton" type="button" aria-label="Pause reminders">Ⅱ</button>
+            <h2 id="todayLabel">Today</h2>
+            <div class="top-icons">
+              <button id="searchButton" type="button" aria-label="Search tasks">⌕</button>
+              <button id="soundButton" type="button" aria-label="Reminder sound" title="Turn reminder sound on or off">○</button>
+              <button id="resetDayButton" type="button" aria-label="Reset today">⋮</button>
+            </div>
+          </header>
+
+          <div class="search-row" id="searchRow">
+            <input id="searchInput" type="search" placeholder="Search habits">
+          </div>
+
+          <div class="timeline" id="timeline"></div>
+
+          <button class="add-button" id="addTaskButton" type="button" aria-label="Add habit">+</button>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="task-dialog" id="taskDialog">
+      <form method="dialog" id="taskForm">
+        <header>
+          <h2 id="dialogTitle">Add Habit</h2>
+          <button value="cancel" type="button" id="closeDialog" aria-label="Close">×</button>
+        </header>
+        <label>
+          Habit name
+          <input id="taskName" required maxlength="42" placeholder="Drink 1L Water">
+        </label>
+        <div class="form-grid">
+          <label>
+            Category
+            <select id="taskCategory"></select>
+          </label>
+          <label>
+            Reminder type
+            <select id="taskType">
+              <option value="time">At a time</option>
+              <option value="interval">Every duration</option>
+            </select>
+          </label>
+        </div>
+        <div class="category-builder">
+          <label>
+            Add category
+            <input id="newCategoryName" maxlength="28" placeholder="Coding, Fitness, Prayer">
+          </label>
+          <button id="addCategoryButton" type="button">Add</button>
+          <span class="category-preview" id="categoryPreview" aria-hidden="true">+</span>
+        </div>
+        <div class="form-grid">
+          <label id="timeField">
+            Time
+            <input id="taskTime" type="time" value="20:00">
+          </label>
+          <label id="intervalField">
+            Every minutes
+            <input id="taskInterval" type="number" min="1" max="720" value="10">
+          </label>
+        </div>
+        <label>
+          Goal for today
+          <input id="taskGoal" type="number" min="1" max="99" value="1">
+        </label>
+        <menu>
+          <button class="delete-task" id="deleteTaskButton" type="button">Delete</button>
+          <span></span>
+          <button value="cancel" type="button" id="cancelDialog">Cancel</button>
+          <button class="save-task" id="saveTaskButton" type="submit">Save</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
