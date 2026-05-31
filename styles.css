@@ -48,6 +48,7 @@ button {
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 65fr) minmax(430px, 35fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 8px;
   align-items: stretch;
   padding: 4px 6px;
@@ -469,15 +470,19 @@ button {
 }
 
 .phone-panel {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
   display: grid;
-  place-items: center;
+  align-items: stretch;
+  justify-items: center;
   min-width: 0;
   min-height: 0;
 }
 
 .phone-frame {
   width: 100%;
-  height: calc(100vh - 20px);
+  height: 100%;
   min-height: 0;
   position: relative;
   overflow: hidden;
@@ -570,6 +575,7 @@ button {
 
 .timeline {
   height: calc(100% - 92px);
+  position: relative;
   padding: 30px 0 86px;
   overflow: auto;
   scrollbar-width: none;
@@ -585,6 +591,7 @@ button {
   align-items: center;
   min-height: 92px;
   position: relative;
+  z-index: 1;
 }
 
 .task-row::before {
@@ -602,6 +609,31 @@ button {
   padding-top: 0;
   color: #a5a5a5;
   font-size: 11px;
+  line-height: 1.25;
+}
+
+.time-progress {
+  position: absolute;
+  left: 66px;
+  top: 30px;
+  bottom: 86px;
+  width: 4px;
+  border-radius: 999px;
+  background: rgba(83, 189, 217, 0.12);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.time-progress span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #7de6ff, #45a9d8);
+  box-shadow: 0 0 16px rgba(125, 230, 255, 0.6);
+  transition: height 0.8s ease;
 }
 
 .task-pill {
@@ -846,6 +878,11 @@ button {
     width: min(100vw - 14px, 900px);
     overflow: visible;
     padding: 14px 0 28px;
+  }
+
+  .phone-panel {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .stats-panel {
