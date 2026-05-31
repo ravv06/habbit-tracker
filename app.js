@@ -198,6 +198,10 @@ function renderTimeline() {
     const complete = taskComplete(task);
     const row = document.createElement("div");
     row.className = `task-row ${index === 0 ? "featured" : ""} ${complete ? "complete" : ""}`;
+    if (task.type !== "interval") {
+      row.dataset.start = String(minutesFromTime(task.time || "00:00"));
+      row.dataset.end = String(minutesFromTime(task.endTime || defaultEndTime(task.time || "00:00")));
+    }
     row.innerHTML = `
       <div class="time-label">${timelineTimeLabel(task)}</div>
       <div class="task-pill">
@@ -246,8 +250,44 @@ function updateTimeProgress() {
   const progress = refs.timeline.querySelector(".time-progress span");
   if (!progress) return;
   const now = new Date();
-  const dayPercent = ((now.getHours() * 60 + now.getMinutes()) / 1440) * 100;
-  progress.style.height = `${Math.max(3, Math.min(dayPercent, 100))}%`;
+  const nowMinutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  const rows = [...refs.timeline.querySelectorAll(".task-row")];
+  const timedRows = rows
+    .filter(row => row.dataset.start && row.dataset.end)
+    .map(row => ({
+      row,
+      start: Number(row.dataset.start),
+      end: Number(row.dataset.end)
+    }));
+
+  if (!timedRows.length) {
+    progress.style.height = rows.length ? `${rows[0].offsetTop + rows[0].offsetHeight}px` : "3%";
+    return;
+  }
+
+  const railTop = progress.parentElement.offsetTop;
+  let height = timedRows[0].row.offsetTop - railTop;
+  for (const item of timedRows) {
+    const rowTop = item.row.offsetTop;
+    const rowHeight = item.row.offsetHeight;
+    const crossesMidnight = item.end <= item.start;
+    const end = crossesMidnight ? item.end + 1440 : item.end;
+    const current = crossesMidnight && nowMinutes < item.start ? nowMinutes + 1440 : nowMinutes;
+
+    if (current < item.start) {
+      height = Math.max(height, rowTop - railTop);
+      break;
+    }
+    if (current >= item.start && current <= end) {
+      const ratio = (current - item.start) / Math.max(end - item.start, 1);
+      height = rowTop - railTop + rowHeight * ratio;
+      break;
+    }
+    height = rowTop - railTop + rowHeight;
+  }
+
+  const maxHeight = progress.parentElement.offsetHeight;
+  progress.style.height = `${Math.max(8, Math.min(height, maxHeight))}px`;
 }
 
 function renderStats() {
