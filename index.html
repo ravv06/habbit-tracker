@@ -133,7 +133,7 @@
           <label>
             Reminder type
             <select id="taskType">
-              <option value="time">At a time</option>
+              <option value="time">At a duration</option>
               <option value="interval">Every duration</option>
             </select>
           </label>
@@ -148,8 +148,12 @@
         </div>
         <div class="form-grid">
           <label id="timeField">
-            Time
+            Start time
             <input id="taskTime" type="time" value="20:00">
+          </label>
+          <label id="endTimeField">
+            End time
+            <input id="taskEndTime" type="time" value="20:30">
           </label>
           <label id="intervalField">
             Every minutes
