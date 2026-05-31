@@ -59,9 +59,11 @@ const refs = {
   categoryPreview: document.querySelector("#categoryPreview"),
   taskType: document.querySelector("#taskType"),
   taskTime: document.querySelector("#taskTime"),
+  taskEndTime: document.querySelector("#taskEndTime"),
   taskInterval: document.querySelector("#taskInterval"),
   taskGoal: document.querySelector("#taskGoal"),
   timeField: document.querySelector("#timeField"),
+  endTimeField: document.querySelector("#endTimeField"),
   intervalField: document.querySelector("#intervalField"),
   deleteTaskButton: document.querySelector("#deleteTaskButton"),
   closeDialog: document.querySelector("#closeDialog"),
@@ -178,14 +180,15 @@ function render() {
 
 function renderTimeline() {
   const terms = searchTerm.trim().toLowerCase();
-  const sorted = [...state.tasks].sort((a, b) => (a.time || "00:00").localeCompare(b.time || "00:00"));
+  const sorted = [...state.tasks].sort(sortTimelineTasks);
   const filtered = sorted.filter(task => task.name.toLowerCase().includes(terms));
-  refs.timeline.innerHTML = "";
+  refs.timeline.innerHTML = '<div class="time-progress" aria-hidden="true"><span></span></div>';
 
   if (!filtered.length) {
-    refs.timeline.innerHTML = searchTerm.trim()
+    refs.timeline.insertAdjacentHTML("beforeend", searchTerm.trim()
       ? '<p class="empty-state">No habits match your search.</p>'
-      : '<p class="empty-state">No habits yet. Press + to add your first habit.</p>';
+      : '<p class="empty-state">No habits yet. Press + to add your first habit.</p>');
+    updateTimeProgress();
     return;
   }
 
@@ -196,7 +199,7 @@ function renderTimeline() {
     const row = document.createElement("div");
     row.className = `task-row ${index === 0 ? "featured" : ""} ${complete ? "complete" : ""}`;
     row.innerHTML = `
-      <div class="time-label">${task.type === "interval" ? `Every ${task.interval}m` : formatTime(task.time)}</div>
+      <div class="time-label">${timelineTimeLabel(task)}</div>
       <div class="task-pill">
         <span class="task-icon" style="--accent:${category.color}">${category.icon}</span>
         <span class="task-name">${task.name}<small class="task-meta">${done}/${task.goal || 1} done</small></span>
@@ -208,6 +211,43 @@ function renderTimeline() {
     row.querySelector(".edit-button").addEventListener("click", () => openDialog(task.id));
     refs.timeline.append(row);
   });
+  updateTimeProgress();
+}
+
+function sortTimelineTasks(a, b) {
+  if (a.type === "interval" && b.type !== "interval") return -1;
+  if (a.type !== "interval" && b.type === "interval") return 1;
+  if (a.type === "interval" && b.type === "interval") return Number(a.interval || 0) - Number(b.interval || 0);
+  return minutesFromTime(a.time || "00:00") - minutesFromTime(b.time || "00:00");
+}
+
+function timelineTimeLabel(task) {
+  if (task.type === "interval") return `Every ${task.interval}m`;
+  const endTime = task.endTime || defaultEndTime(task.time);
+  return `${formatTime(task.time)} - ${formatTime(endTime)}`;
+}
+
+function minutesFromTime(value) {
+  const [hours, minutes] = (value || "00:00").split(":").map(Number);
+  return (hours || 0) * 60 + (minutes || 0);
+}
+
+function timeFromMinutes(totalMinutes) {
+  const minutes = ((totalMinutes % 1440) + 1440) % 1440;
+  const hours = Math.floor(minutes / 60);
+  return `${String(hours).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+}
+
+function defaultEndTime(startTime) {
+  return timeFromMinutes(minutesFromTime(startTime || "08:00") + 30);
+}
+
+function updateTimeProgress() {
+  const progress = refs.timeline.querySelector(".time-progress span");
+  if (!progress) return;
+  const now = new Date();
+  const dayPercent = ((now.getHours() * 60 + now.getMinutes()) / 1440) * 100;
+  progress.style.height = `${Math.max(3, Math.min(dayPercent, 100))}%`;
 }
 
 function renderStats() {
@@ -306,7 +346,7 @@ function nextReminderTime(task) {
 
 function nextReminderLabel(task) {
   if (task.type === "interval") return `Every ${task.interval}m`;
-  return formatTime(task.time);
+  return `${formatTime(task.time)} - ${formatTime(task.endTime || defaultEndTime(task.time))}`;
 }
 
 function renderBars() {
@@ -386,6 +426,7 @@ function openDialog(taskId = null) {
   refs.taskCategory.value = task?.category === "write" ? "study" : task?.category || state.categories[0]?.id;
   refs.taskType.value = task?.type || "time";
   refs.taskTime.value = task?.time || "20:00";
+  refs.taskEndTime.value = task?.endTime || defaultEndTime(task?.time || "20:00");
   refs.taskInterval.value = task?.interval || 10;
   refs.taskGoal.value = task?.goal || 1;
   updateTypeFields();
@@ -479,6 +520,7 @@ function saveTask(event) {
     category: refs.taskCategory.value,
     type: refs.taskType.value,
     time: refs.taskTime.value || "08:00",
+    endTime: refs.taskEndTime.value || defaultEndTime(refs.taskTime.value || "08:00"),
     interval: Math.max(1, Number(refs.taskInterval.value || 10)),
     goal: Math.max(1, Number(refs.taskGoal.value || 1))
   };
@@ -504,6 +546,7 @@ function deleteTask() {
 function updateTypeFields() {
   const interval = refs.taskType.value === "interval";
   refs.timeField.style.display = interval ? "none" : "grid";
+  refs.endTimeField.style.display = interval ? "none" : "grid";
   refs.intervalField.style.display = interval ? "grid" : "none";
 }
 
@@ -622,3 +665,4 @@ render();
 checkReminders();
 setInterval(checkReminders, 1000);
 setInterval(render, 60000);
+setInterval(updateTimeProgress, 15000);
